@@ -172,7 +172,11 @@ function render() {
     <button class="btn btn-r" onclick="toggleRevise('${a.id}')">✏️ 修改建议</button>
     <button class="btn btn-x" onclick="reject(${idx})">❌ 不通过</button>
   </div>
-  <textarea class="feedback" id="fb-${a.id}" placeholder="写下修改建议，保存后系统会收到通知..."></textarea>
+  <textarea class="feedback" id="fb-${a.id}" placeholder="写下修改建议..."></textarea>
+  <div id="fb-actions-${a.id}" style="display:none;margin-top:8px;">
+    <button class="btn btn-r" onclick="submitFeedback('${a.id}', ${idx})">📤 提交修改建议</button>
+    <span id="fb-status-${a.id}" style="font-size:12px;color:var(--muted);margin-left:8px;"></span>
+  </div>
 </div>`;
   }).join('');
 }
@@ -205,8 +209,47 @@ function approve(idx) {
 
 function toggleRevise(id) {
   const fb = document.getElementById('fb-' + id);
+  const actions = document.getElementById('fb-actions-' + id);
   fb.classList.toggle('show');
+  actions.style.display = fb.classList.contains('show') ? 'block' : 'none';
   if (fb.classList.contains('show')) fb.focus();
+}
+
+function submitFeedback(id, idx) {
+  const fb = document.getElementById('fb-' + id);
+  const status = document.getElementById('fb-status-' + id);
+  const text = fb.value.trim();
+  if (!text) { alert('请先写下修改建议'); fb.focus(); return; }
+
+  status.textContent = '正在提交...';
+
+  // 通过 ntfy 发送反馈
+  fetch('https://ntfy.sh/eros_review_31989a25', {
+    method: 'POST',
+    headers: {
+      'Title': '[FEEDBACK] ' + ARTICLES[idx].title.substring(0,40),
+      'Priority': 'high'
+    },
+    body: 'Article: ' + ARTICLES[idx].title + '\n\nFeedback:\n' + text
+  }).then(r => {
+    if (r.ok) {
+      status.textContent = '✅ 已提交！我会根据你的建议修改文章。';
+      status.style.color = 'var(--green)';
+      fb.value = '';
+      // 3秒后收起
+      setTimeout(() => {
+        fb.classList.remove('show');
+        document.getElementById('fb-actions-' + id).style.display = 'none';
+      }, 3000);
+    } else {
+      // ntfy 失败，用 mailto 备份
+      status.textContent = '⚠️ 推送失败，正在通过邮件发送...';
+      window.location.href = 'mailto:eros.ye@icloud.com?subject=[FEEDBACK] ' + encodeURIComponent(ARTICLES[idx].title) + '&body=' + encodeURIComponent(text);
+    }
+  }).catch(e => {
+    status.textContent = '⚠️ 网络问题，通过邮件发送...';
+    window.location.href = 'mailto:eros.ye@icloud.com?subject=[FEEDBACK] ' + encodeURIComponent(ARTICLES[idx].title) + '&body=' + encodeURIComponent(text);
+  });
 }
 
 function reject(idx) {
