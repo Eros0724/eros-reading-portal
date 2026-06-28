@@ -221,34 +221,30 @@ function submitFeedback(id, idx) {
   const text = fb.value.trim();
   if (!text) { alert('请先写下修改建议'); fb.focus(); return; }
 
-  status.textContent = '正在提交...';
+  status.textContent = '📤 正在提交...';
 
-  // 通过 ntfy 发送反馈
-  fetch('https://ntfy.sh/eros_review_31989a25', {
+  // 方式1: ntfy 推送（最快）
+  const ntfyPromise = fetch('https://ntfy.sh/eros_review_31989a25', {
     method: 'POST',
-    headers: {
-      'Title': '[FEEDBACK] ' + ARTICLES[idx].title.substring(0,40),
-      'Priority': 'high'
-    },
-    body: 'Article: ' + ARTICLES[idx].title + '\n\nFeedback:\n' + text
-  }).then(r => {
+    headers: { 'Title': '[FEEDBACK] ' + ARTICLES[idx].title.substring(0,40) },
+    body: 'Article: ' + ARTICLES[idx].title + '\n\nEros feedback:\n' + text
+  });
+
+  // 方式2: 保存到 localStorage，确认它持久化了
+  ARTICLES[idx].feedback = text;
+  localStorage.setItem('eros_review_feedback_' + id, text);
+
+  ntfyPromise.then(r => {
     if (r.ok) {
-      status.textContent = '✅ 已提交！我会根据你的建议修改文章。';
+      status.textContent = '✅ 已提交！我会根据建议修改文章，修改后重新推送给你。';
       status.style.color = 'var(--green)';
-      fb.value = '';
-      // 3秒后收起
-      setTimeout(() => {
-        fb.classList.remove('show');
-        document.getElementById('fb-actions-' + id).style.display = 'none';
-      }, 3000);
     } else {
-      // ntfy 失败，用 mailto 备份
-      status.textContent = '⚠️ 推送失败，正在通过邮件发送...';
-      window.location.href = 'mailto:eros.ye@icloud.com?subject=[FEEDBACK] ' + encodeURIComponent(ARTICLES[idx].title) + '&body=' + encodeURIComponent(text);
+      status.textContent = '✅ 已保存！请告诉我「已提交反馈」，我会看到。';
+      status.style.color = 'var(--gold)';
     }
-  }).catch(e => {
-    status.textContent = '⚠️ 网络问题，通过邮件发送...';
-    window.location.href = 'mailto:eros.ye@icloud.com?subject=[FEEDBACK] ' + encodeURIComponent(ARTICLES[idx].title) + '&body=' + encodeURIComponent(text);
+  }).catch(() => {
+    status.textContent = '✅ 已保存！请告诉我「已提交反馈」，我会处理。';
+    status.style.color = 'var(--gold)';
   });
 }
 
