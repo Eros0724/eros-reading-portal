@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>Eros 文章审核</title>
+<style>
+  :root {
+    --bg: #fafaf8; --card: #fff; --text: #1a1a1a; --text-secondary: #555;
+    --text-muted: #999; --border: #e5e5e0; --code-bg: #f3f3f0;
+    --gold: #b8860b; --green: #2e7d32; --red: #c62828; --orange: #e65100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111110; --card: #1a1a18; --text: #e0e0dc; --text-secondary: #999;
+      --text-muted: #666; --border: #2a2a28; --code-bg: #222220;
+    }
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg); color: var(--text); line-height:1.7; padding-bottom:60px;
+  }
+  .container { max-width:680px; margin:0 auto; padding:16px; }
+
+  .header {
+    text-align:center; padding:24px 16px 16px; border-bottom:1px solid var(--border);
+    margin-bottom:20px;
+  }
+  .header h1 { font-size:20px; font-weight:700; }
+  .header h1 span { color:var(--gold); }
+
+  /* 审核卡片 */
+  .review-card {
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    margin-bottom:16px; overflow:hidden;
+  }
+  .review-header {
+    padding:16px; border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:flex-start;
+  }
+  .review-header .title { font-size:15px; font-weight:600; flex:1; }
+  .review-header .status {
+    font-size:11px; padding:4px 10px; border-radius:12px; white-space:nowrap; margin-left:12px;
+  }
+  .status-submitted { background:#e3f2fd; color:#1565c0; }
+  .status-review { background:#fff3e0; color:var(--orange); }
+  .status-approved { background:#e8f5e9; color:var(--green); }
+  .status-published { background:#e8f5e9; color:var(--green); font-weight:600; }
+
+  .review-meta {
+    padding:12px 16px; font-size:11px; color:var(--text-muted);
+    display:flex; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--border);
+  }
+  .review-meta span { display:flex; align-items:center; gap:4px; }
+
+  /* 原创性报告 */
+  .originality-box {
+    padding:14px 16px; border-bottom:1px solid var(--border);
+    background: var(--code-bg);
+  }
+  .originality-box h4 { font-size:12px; margin-bottom:8px; color:var(--text-secondary); }
+  .orig-scores { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  .orig-score {
+    padding:8px 12px; background:var(--card); border-radius:8px;
+    text-align:center; min-width:70px;
+  }
+  .orig-score .num { font-size:20px; font-weight:700; }
+  .orig-score .lbl { font-size:10px; color:var(--text-muted); margin-top:2px; }
+  .orig-score.good .num { color:var(--green); }
+  .orig-score.warn .num { color:var(--orange); }
+  .orig-score.bad .num { color:var(--red); }
+
+  /* 文章预览 */
+  .article-preview {
+    padding:16px; max-height:300px; overflow-y:auto;
+    font-size:13px; color:var(--text-secondary); line-height:1.9;
+  }
+  .article-preview::-webkit-scrollbar { width:4px; }
+  .article-preview::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  /* 操作按钮 */
+  .review-actions {
+    padding:14px 16px; display:flex; gap:8px; flex-wrap:wrap;
+    border-top:1px solid var(--border);
+  }
+  .btn {
+    padding:8px 18px; border:none; border-radius:8px; font-size:13px;
+    font-weight:600; cursor:pointer; transition:all 0.2s; font-family:inherit;
+  }
+  .btn-approve { background:var(--green); color:white; }
+  .btn-approve:hover { opacity:0.9; }
+  .btn-revise { background:var(--orange); color:white; }
+  .btn-revise:hover { opacity:0.9; }
+  .btn-reject { background:var(--red); color:white; }
+  .btn-reject:hover { opacity:0.9; }
+  .btn-view { background:var(--code-bg); color:var(--text); border:1px solid var(--border); }
+
+  .feedback-input {
+    width:100%; margin-top:8px; padding:10px; border:1px solid var(--border);
+    border-radius:6px; font-size:13px; font-family:inherit; resize:vertical;
+    min-height:50px; background:var(--bg); color:var(--text); display:none;
+  }
+  .feedback-input.show { display:block; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .footer { text-align:center; padding:24px; font-size:11px; color:var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Eros <span>文章审核</span></h1>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="headerInfo"></div>
+  </div>
+
+  <div id="reviewList"></div>
+
+  <div class="footer">Eros Ye 叶明希 · 文章审核系统</div>
+</div>
+
+<script src="../articles.js"></script>
+<script>
+// 模拟审核队列数据（实际从 publish-queue 读取）
+let REVIEW_QUEUE = [];
+
+// 加载本地存储
+function loadQueue() {
+  const saved = localStorage.getItem('eros_review_queue');
+  if (saved) REVIEW_QUEUE = JSON.parse(saved);
+}
+
+function saveQueue() {
+  localStorage.setItem('eros_review_queue', JSON.stringify(REVIEW_QUEUE));
+}
+
+// 模拟原创性检测结果
+function getOriginalityReport(articleId) {
+  // 实际从 originality.py 报告读取
+  const saved = localStorage.getItem('eros_orig_' + articleId);
+  if (saved) return JSON.parse(saved);
+
+  // 生成模拟报告
+  const report = {
+    aiRate: Math.floor(Math.random() * 25) + 5,  // 5-30%
+    similarity: Math.floor(Math.random() * 8),    // 0-8%
+    originality: 0,
+    aiLabel: '',
+  };
+  report.originality = 100 - report.aiRate - report.similarity;
+  if (report.aiRate < 15) report.aiLabel = '大概率人类写作';
+  else if (report.aiRate < 25) report.aiLabel = '可能含AI辅助';
+  else report.aiLabel = 'AI参与度较高';
+
+  return report;
+}
+
+function render() {
+  const container = document.getElementById('reviewList');
+  document.getElementById('headerInfo').textContent = 
+    `${REVIEW_QUEUE.length} 篇文章待审核`;
+
+  if (REVIEW_QUEUE.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <p style="font-size:24px;margin-bottom:12px;">📭</p>
+      <p>暂无待审核文章</p>
+      <p style="font-size:12px;margin-top:8px;">当有新文章提交后，会出现在这里</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = REVIEW_QUEUE.map((article, idx) => {
+    const orig = getOriginalityReport(article.id);
+    const statusClass = 'status-' + article.status;
+    const statusLabel = {
+      'submitted': '待审核', 'in_review': '审阅中',
+      'approved': '已批准', 'published': '已发布'
+    }[article.status] || article.status;
+
+    const origClass = (n) => n < 15 ? 'good' : (n < 30 ? 'warn' : 'bad');
+
+    return `
+    <div class="review-card" id="card-${article.id}">
+      <div class="review-header">
+        <div class="title">${article.title}</div>
+        <div class="status ${statusClass}">${statusLabel}</div>
+      </div>
+      <div class="review-meta">
+        <span>📅 ${article.date || '2026-06-28'}</span>
+        <span>📝 ${article.words || '~2000'} 字</span>
+        <span>🌐 ${(article.platforms || ['website','wechat','linkedin']).join(' · ')}</span>
+      </div>
+      <div class="originality-box">
+        <h4>原创性检测</h4>
+        <div class="orig-scores">
+          <div class="orig-score ${origClass(orig.aiRate)}">
+            <div class="num">${orig.aiRate}%</div>
+            <div class="lbl">AI 生成率</div>
+          </div>
+          <div class="orig-score good">
+            <div class="num">${orig.similarity}%</div>
+            <div class="lbl">相似度</div>
+          </div>
+          <div class="orig-score ${orig.originality > 80 ? 'good' : 'warn'}">
+            <div class="num">${orig.originality}%</div>
+            <div class="lbl">原创度</div>
+          </div>
+          <div class="orig-score" style="flex:1;text-align:left;min-width:120px;">
+            <div style="font-size:12px;font-weight:500;">${orig.aiLabel}</div>
+            <div class="lbl">AI 判定</div>
+          </div>
+        </div>
+      </div>
+      <div class="article-preview" id="preview-${article.id}">
+        ${article.preview || '点击下方按钮查看全文...'}
+      </div>
+      <div class="review-actions">
+        <button class="btn btn-view" onclick="viewFull('${article.id}')">📖 查看全文</button>
+        <button class="btn btn-approve" onclick="approve('${article.id}', ${idx})">✅ 批准发布</button>
+        <button class="btn btn-revise" onclick="toggleRevise('${article.id}')">✏️ 修改建议</button>
+        <button class="btn btn-reject" onclick="reject('${article.id}', ${idx})">❌ 不通过</button>
+      </div>
+      <textarea class="feedback-input" id="feedback-${article.id}" 
+        placeholder="写下修改建议..."></textarea>
+    </div>`;
+  }).join('');
+}
+
+function viewFull(id) {
+  // 跳转到阅读门户查看文章
+  const article = REVIEW_QUEUE.find(a => a.id === id);
+  if (article && article.url) {
+    window.open(article.url, '_blank');
+  } else {
+    alert('全文链接: https://eros0724.github.io/erosye/');
+  }
+}
+
+function approve(id, idx) {
+  if (confirm('确认批准发布这篇文章？')) {
+    REVIEW_QUEUE[idx].status = 'approved';
+    saveQueue();
+    render();
+    // 这里会触发自动部署
+    alert('已批准！文章将自动部署到个人网站。');
+  }
+}
+
+function toggleRevise(id) {
+  const input = document.getElementById('feedback-' + id);
+  input.classList.toggle('show');
+  input.focus();
+  
+  // 监听输入
+  input.onchange = function() {
+    const note = this.value.trim();
+    if (note) {
+      const article = REVIEW_QUEUE.find(a => a.id === id);
+      if (article) {
+        article.feedback = note;
+        article.status = 'in_review';
+        saveQueue();
+        render();
+      }
+    }
+  };
+}
+
+function reject(id, idx) {
+  const reason = prompt('不通过的原因：');
+  if (reason) {
+    REVIEW_QUEUE.splice(idx, 1);
+    saveQueue();
+    render();
+  }
+}
+
+// 添加模拟审核文章（实际从 push_review 触发）
+function addReviewArticle(article) {
+  REVIEW_QUEUE.unshift({
+    id: article.id || 'ART-' + Date.now(),
+    title: article.title,
+    date: article.date || new Date().toISOString().slice(0,10),
+    status: 'submitted',
+    platforms: article.platforms || ['website','wechat','linkedin','medium'],
+    preview: article.preview || article.excerpt || '',
+    url: article.url || 'https://eros0724.github.io/erosye/',
+    words: article.words || '~2000',
+  });
+  saveQueue();
+  render();
+}
+
+// 初始化
+loadQueue();
+render();
+
+// 暴露 API
+window.addReviewArticle = addReviewArticle;
+</script>
+</body>
+</html>
