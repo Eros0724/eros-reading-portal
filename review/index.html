@@ -2,301 +2,228 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eros 文章审核</title>
 <style>
-  :root {
-    --bg: #fafaf8; --card: #fff; --text: #1a1a1a; --text-secondary: #555;
-    --text-muted: #999; --border: #e5e5e0; --code-bg: #f3f3f0;
-    --gold: #b8860b; --green: #2e7d32; --red: #c62828; --orange: #e65100;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #111110; --card: #1a1a18; --text: #e0e0dc; --text-secondary: #999;
-      --text-muted: #666; --border: #2a2a28; --code-bg: #222220;
-    }
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg); color: var(--text); line-height:1.7; padding-bottom:60px;
-  }
-  .container { max-width:680px; margin:0 auto; padding:16px; }
-
-  .header {
-    text-align:center; padding:24px 16px 16px; border-bottom:1px solid var(--border);
-    margin-bottom:20px;
-  }
-  .header h1 { font-size:20px; font-weight:700; }
-  .header h1 span { color:var(--gold); }
-
-  /* 审核卡片 */
-  .review-card {
-    background:var(--card); border:1px solid var(--border); border-radius:10px;
-    margin-bottom:16px; overflow:hidden;
-  }
-  .review-header {
-    padding:16px; border-bottom:1px solid var(--border);
-    display:flex; justify-content:space-between; align-items:flex-start;
-  }
-  .review-header .title { font-size:15px; font-weight:600; flex:1; }
-  .review-header .status {
-    font-size:11px; padding:4px 10px; border-radius:12px; white-space:nowrap; margin-left:12px;
-  }
-  .status-submitted { background:#e3f2fd; color:#1565c0; }
-  .status-review { background:#fff3e0; color:var(--orange); }
-  .status-approved { background:#e8f5e9; color:var(--green); }
-  .status-published { background:#e8f5e9; color:var(--green); font-weight:600; }
-
-  .review-meta {
-    padding:12px 16px; font-size:11px; color:var(--text-muted);
-    display:flex; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--border);
-  }
-  .review-meta span { display:flex; align-items:center; gap:4px; }
-
-  /* 原创性报告 */
-  .originality-box {
-    padding:14px 16px; border-bottom:1px solid var(--border);
-    background: var(--code-bg);
-  }
-  .originality-box h4 { font-size:12px; margin-bottom:8px; color:var(--text-secondary); }
-  .orig-scores { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
-  .orig-score {
-    padding:8px 12px; background:var(--card); border-radius:8px;
-    text-align:center; min-width:70px;
-  }
-  .orig-score .num { font-size:20px; font-weight:700; }
-  .orig-score .lbl { font-size:10px; color:var(--text-muted); margin-top:2px; }
-  .orig-score.good .num { color:var(--green); }
-  .orig-score.warn .num { color:var(--orange); }
-  .orig-score.bad .num { color:var(--red); }
-
-  /* 文章预览 */
-  .article-preview {
-    padding:16px; max-height:300px; overflow-y:auto;
-    font-size:13px; color:var(--text-secondary); line-height:1.9;
-  }
-  .article-preview::-webkit-scrollbar { width:4px; }
-  .article-preview::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-
-  /* 操作按钮 */
-  .review-actions {
-    padding:14px 16px; display:flex; gap:8px; flex-wrap:wrap;
-    border-top:1px solid var(--border);
-  }
-  .btn {
-    padding:8px 18px; border:none; border-radius:8px; font-size:13px;
-    font-weight:600; cursor:pointer; transition:all 0.2s; font-family:inherit;
-  }
-  .btn-approve { background:var(--green); color:white; }
-  .btn-approve:hover { opacity:0.9; }
-  .btn-revise { background:var(--orange); color:white; }
-  .btn-revise:hover { opacity:0.9; }
-  .btn-reject { background:var(--red); color:white; }
-  .btn-reject:hover { opacity:0.9; }
-  .btn-view { background:var(--code-bg); color:var(--text); border:1px solid var(--border); }
-
-  .feedback-input {
-    width:100%; margin-top:8px; padding:10px; border:1px solid var(--border);
-    border-radius:6px; font-size:13px; font-family:inherit; resize:vertical;
-    min-height:50px; background:var(--bg); color:var(--text); display:none;
-  }
-  .feedback-input.show { display:block; }
-
-  .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
-  .footer { text-align:center; padding:24px; font-size:11px; color:var(--text-muted); }
+:root{--bg:#fafaf8;--card:#fff;--text:#1a1a1a;--text2:#555;--muted:#999;--border:#e5e5e0;--code:#f3f3f0;--gold:#b8860b;--green:#2e7d32;--red:#c62828;--orange:#e65100}
+@media(prefers-color-scheme:dark){:root{--bg:#111110;--card:#1a1a18;--text:#e0e0dc;--text2:#999;--muted:#666;--border:#2a2a28;--code:#222220}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+.container{max-width:680px;margin:0 auto;padding:16px}
+.header{text-align:center;padding:24px 16px 16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.header h1{font-size:20px;font-weight:700}.header h1 span{color:var(--gold)}
+.header .info{font-size:12px;color:var(--muted);margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;overflow:hidden}
+.card-hd{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.card-hd .t{font-size:15px;font-weight:600;flex:1}
+.card-hd .s{font-size:11px;padding:4px 10px;border-radius:12px;white-space:nowrap;margin-left:12px}
+.s-pending{background:#e3f2fd;color:#1565c0}.s-approved{background:#e8f5e9;color:var(--green)}.s-rejected{background:#fce4ec;color:var(--red)}
+.meta{padding:12px 16px;font-size:11px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+.orig{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--code)}
+.orig h4{font-size:12px;margin-bottom:8px;color:var(--text2)}
+.scores{display:flex;gap:12px;flex-wrap:wrap}
+.score{padding:8px 12px;background:var(--card);border-radius:8px;text-align:center;min-width:70px}
+.score .n{font-size:20px;font-weight:700}.score .l{font-size:10px;color:var(--muted);margin-top:2px}
+.score.good .n{color:var(--green)}.score.warn .n{color:var(--orange)}.score.bad .n{color:var(--red)}
+.preview{padding:16px;max-height:400px;overflow-y:auto;font-size:13px;color:var(--text2);line-height:1.9;white-space:pre-wrap}
+.preview::-webkit-scrollbar{width:4px}.preview::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.actions{padding:14px 16px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border)}
+.btn{padding:8px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-a{background:var(--green);color:#fff}.btn-r{background:var(--orange);color:#fff}.btn-x{background:var(--red);color:#fff}
+.btn-v{background:var(--code);color:var(--text);border:1px solid var(--border)}
+.feedback{width:100%;margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;min-height:50px;background:var(--bg);color:var(--text);display:none}
+.feedback.show{display:block}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.footer{text-align:center;padding:24px;font-size:11px;color:var(--muted)}
+a{color:var(--gold);text-decoration:none}
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="header">
-    <h1>Eros <span>文章审核</span></h1>
-    <div style="font-size:12px;color:var(--text-muted);margin-top:4px;" id="headerInfo"></div>
-  </div>
-
-  <div id="reviewList"></div>
-
-  <div class="footer">Eros Ye 叶明希 · 文章审核系统</div>
+<div class="header">
+<h1>Eros <span>文章审核</span></h1>
+<div class="info" id="info"></div>
 </div>
-
-<script src="../articles.js"></script>
+<div id="list"></div>
+<div class="footer">Eros Ye 叶明希 · 文章审核系统</div>
+</div>
 <script>
-// 模拟审核队列数据（实际从 publish-queue 读取）
-let REVIEW_QUEUE = [];
+// === 文章数据（直接嵌入，不依赖API）===
+const ARTICLES = [
+{
+  id: "ART-20260628193845",
+  title: "AI正在走进团队，但我们真的准备好了吗？",
+  date: "2026-06-28",
+  status: "pending",
+  words: "~2000",
+  platforms: ["website","wechat","linkedin","medium"],
+  orig: { aiRate: 30, similarity: 0, originality: 70, label: "可能含AI辅助" },
+  content: `上个月的一个周三下午，我在西安研发中心旁听了一个项目回顾会。
 
-// 加载本地存储
-function loadQueue() {
-  const saved = localStorage.getItem('eros_review_queue');
-  if (saved) REVIEW_QUEUE = JSON.parse(saved);
+团队刚刚完成一个核心模块的交付。项目经理在复盘时提了一句：「这次我们比计划提前了两周。」我问原因，技术负责人想了想说：「Copilot 帮了很大的忙。但不是你想的那种——不是每个人写得快了。是那几个经验最丰富的工程师，用 AI 的方式和我们预期的不太一样。」
+
+这句话让我想了很久。
+
+正好最近 KPMG 发了一份报告，讨论 AI Agent 应该如何被视为「数字员工」纳入组织架构。报告里有很多值得思考的框架。但读完以后，我总觉得少了点什么——少了那个技术负责人在会议室里说的那种东西：真正发生在团队里的、微妙的、不那么整齐的变化。
+
+---
+
+摩根士丹利的一个细节
+
+先讲一个案例。
+
+2024 年，摩根士丹利给财务顾问团队部署了一个 AI 工具，可以在客户通话后自动生成会议纪要，提取行动事项，同步到 CRM 系统。
+
+听起来不复杂。但有个数字让我印象深刻：98% 的顾问自愿采用了这个工具。
+
+做过企业软件部署的人都知道，98% 的自愿采用率意味着什么——大部分企业内部工具的采用率能超过 60% 就算成功了。摩根士丹利的顾问们不是被要求用的，他们是自己选择用的。
+
+为什么？因为 AI 帮他们省掉了最无聊的那部分工作——花 20 分钟回忆通话内容、整理笔记、录入系统。而顾问们可以把精力放在真正有价值的事情上：理解客户需求、思考投资策略、维护信任关系。
+
+---
+
+资深者的秘密
+
+在我们的数据里，资深开发者在 Copilot 上的生产力提升，明显大于初级开发者。
+
+一开始我觉得这个结果有点反直觉——难道不是新人更需要 AI 帮忙吗？
+
+后来我和几位资深工程师聊了聊，发现了一个有趣的模式。一个在汇丰工作了 12 年的工程师告诉我：「我用 Copilot 不是让它替我写代码。我是让它帮我处理那些我已经知道怎么写、但写起来很花时间的部分。这样我就能把精力花在那些真正需要判断力的地方——架构该怎么设计，边界条件该怎么处理。」
+
+而初级开发者的情况不同。他们往往让 Copilot 直接生成大段代码，然后花更多时间去理解和调试。AI 确实帮了他们，但帮的方式不一样。
+
+这让我想起经济学里的「技术-技能互补」理论：新技术往往不是替代高技能劳动者，而是和他们的能力形成互补，放大他们已经具备的优势。
+
+---
+
+溢出效应：为什么小团队更受益
+
+在我们的研究里，有一个发现让我特别兴奋。
+
+我们发现，初级开发者在有活跃使用 AI 的资深同事的团队中，生产力提升更大。而且这个效果在小团队（少于 5 个 AI 用户）中更强。
+
+换句话说，资深者使用 AI 的方式，会「溢出」到整个团队。
+
+为什么是小团队？我和几个团队负责人讨论后，有了一个猜测：在小团队里，资深者的工作习惯更容易被观察到。新人能看到他是怎么写 prompt 的，怎么验证 AI 输出的，什么时候采纳建议、什么时候推翻重来。这些微妙的实践，在 10 人以上的大团队里会被稀释。
+
+Salesforce 的法务团队也有类似的经验。他们的 AI 合同审查工具最初只在一个小组试用。两周后，因为效果明显，其他组主动要求接入。不是被推下去的，是被「拉」过去的。
+
+---
+
+时区消失了，但距离还在
+
+我的另一项研究覆盖了 7,439 个团队、超过 75,000 名开发者，发现了一个和直觉不太一样的结果。
+
+AI 确实让跨时区协作更高效了。这一点不意外——当你的队友在睡觉时，AI 可以帮你理解他们留下的代码、写文档、准备 code review。时区差异越大的团队，AI 的正面效果越强。
+
+但我们同时发现，AI 对空间距离没有任何缓解作用。
+
+什么意思呢？如果你的团队分布在广州和西安，时区一样，但城市不同——AI 帮不了你建立信任，帮不了你解决「我们这边的优先级和他们那边不一样」的问题，也替代不了面对面建立的那种默契。
+
+---
+
+写在最后
+
+我写这篇文章的时候，一直在想那个西安会议上的技术负责人。他说的那句话我到现在还记得：「他们用 AI 的方式和我们预期的不太一样。」
+
+也许这就是 AI 进入团队之后，最值得关注的事情——不是 AI 本身有多强大，而是人如何使用它、如何互相学习、如何在新的工具面前重新定义协作的方式。
+
+框架和现实之间，隔着无数个周三下午的会议室，隔着一个技术负责人发现「事情和预期不太一样」的时刻。那些时刻，才是真正值得写的。`
 }
+];
 
-function saveQueue() {
-  localStorage.setItem('eros_review_queue', JSON.stringify(REVIEW_QUEUE));
-}
-
-// 模拟原创性检测结果
-function getOriginalityReport(articleId) {
-  // 实际从 originality.py 报告读取
-  const saved = localStorage.getItem('eros_orig_' + articleId);
-  if (saved) return JSON.parse(saved);
-
-  // 生成模拟报告
-  const report = {
-    aiRate: Math.floor(Math.random() * 25) + 5,  // 5-30%
-    similarity: Math.floor(Math.random() * 8),    // 0-8%
-    originality: 0,
-    aiLabel: '',
-  };
-  report.originality = 100 - report.aiRate - report.similarity;
-  if (report.aiRate < 15) report.aiLabel = '大概率人类写作';
-  else if (report.aiRate < 25) report.aiLabel = '可能含AI辅助';
-  else report.aiLabel = 'AI参与度较高';
-
-  return report;
-}
-
+// === 渲染 ===
 function render() {
-  const container = document.getElementById('reviewList');
-  document.getElementById('headerInfo').textContent = 
-    `${REVIEW_QUEUE.length} 篇文章待审核`;
+  const list = document.getElementById('list');
+  document.getElementById('info').textContent = ARTICLES.length + ' 篇文章待审核';
 
-  if (REVIEW_QUEUE.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <p style="font-size:24px;margin-bottom:12px;">📭</p>
-      <p>暂无待审核文章</p>
-      <p style="font-size:12px;margin-top:8px;">当有新文章提交后，会出现在这里</p>
-    </div>`;
+  if (ARTICLES.length === 0) {
+    list.innerHTML = '<div class="empty"><p style="font-size:24px;margin-bottom:12px;">📭</p><p>暂无待审核文章</p></div>';
     return;
   }
 
-  container.innerHTML = REVIEW_QUEUE.map((article, idx) => {
-    const orig = getOriginalityReport(article.id);
-    const statusClass = 'status-' + article.status;
-    const statusLabel = {
-      'submitted': '待审核', 'in_review': '审阅中',
-      'approved': '已批准', 'published': '已发布'
-    }[article.status] || article.status;
+  list.innerHTML = ARTICLES.map((a, idx) => {
+    const o = a.orig || {};
+    const cls = (n) => n < 15 ? 'good' : (n < 30 ? 'warn' : 'bad');
+    const sCls = a.status === 'approved' ? 's-approved' : (a.status === 'rejected' ? 's-rejected' : 's-pending');
+    const sLabel = { pending: '待审核', approved: '已批准', rejected: '不通过' }[a.status] || a.status;
 
-    const origClass = (n) => n < 15 ? 'good' : (n < 30 ? 'warn' : 'bad');
+    return `<div class="card">
+  <div class="card-hd"><div class="t">${a.title}</div><div class="s ${sCls}">${sLabel}</div></div>
+  <div class="meta">
+    <span>📅 ${a.date}</span><span>📝 ${a.words}</span>
+    <span>🌐 ${(a.platforms||[]).join(' · ')}</span>
+  </div>
+  <div class="orig">
+    <h4>原创性检测</h4>
+    <div class="scores">
+      <div class="score ${cls(o.aiRate||0)}"><div class="n">${o.aiRate||'?'}%</div><div class="l">AI生成率</div></div>
+      <div class="score good"><div class="n">${o.similarity||0}%</div><div class="l">相似度</div></div>
+      <div class="score ${(o.originality||0)>80?'good':'warn'}"><div class="n">${o.originality||'?'}%</div><div class="l">原创度</div></div>
+      <div class="score" style="flex:1;text-align:left;min-width:120px"><div style="font-size:12px">${o.label||'-'}</div><div class="l">AI判定</div></div>
+    </div>
+  </div>
+  <div class="preview" id="pv-${a.id}">${(a.content||'').substring(0, 500)}...
 
-    return `
-    <div class="review-card" id="card-${article.id}">
-      <div class="review-header">
-        <div class="title">${article.title}</div>
-        <div class="status ${statusClass}">${statusLabel}</div>
-      </div>
-      <div class="review-meta">
-        <span>📅 ${article.date || '2026-06-28'}</span>
-        <span>📝 ${article.words || '~2000'} 字</span>
-        <span>🌐 ${(article.platforms || ['website','wechat','linkedin']).join(' · ')}</span>
-      </div>
-      <div class="originality-box">
-        <h4>原创性检测</h4>
-        <div class="orig-scores">
-          <div class="orig-score ${origClass(orig.aiRate)}">
-            <div class="num">${orig.aiRate}%</div>
-            <div class="lbl">AI 生成率</div>
-          </div>
-          <div class="orig-score good">
-            <div class="num">${orig.similarity}%</div>
-            <div class="lbl">相似度</div>
-          </div>
-          <div class="orig-score ${orig.originality > 80 ? 'good' : 'warn'}">
-            <div class="num">${orig.originality}%</div>
-            <div class="lbl">原创度</div>
-          </div>
-          <div class="orig-score" style="flex:1;text-align:left;min-width:120px;">
-            <div style="font-size:12px;font-weight:500;">${orig.aiLabel}</div>
-            <div class="lbl">AI 判定</div>
-          </div>
-        </div>
-      </div>
-      <div class="article-preview" id="preview-${article.id}">
-        ${article.preview || '点击下方按钮查看全文...'}
-      </div>
-      <div class="review-actions">
-        <button class="btn btn-view" onclick="viewFull('${article.id}')">📖 查看全文</button>
-        <button class="btn btn-approve" onclick="approve('${article.id}', ${idx})">✅ 批准发布</button>
-        <button class="btn btn-revise" onclick="toggleRevise('${article.id}')">✏️ 修改建议</button>
-        <button class="btn btn-reject" onclick="reject('${article.id}', ${idx})">❌ 不通过</button>
-      </div>
-      <textarea class="feedback-input" id="feedback-${article.id}" 
-        placeholder="写下修改建议..."></textarea>
-    </div>`;
+  [向下滚动查看全文]</div>
+  <div class="actions">
+    <button class="btn btn-v" onclick="toggleFull('${a.id}', ${idx})">📖 展开/收起全文</button>
+    <button class="btn btn-a" onclick="approve(${idx})">✅ 批准发布</button>
+    <button class="btn btn-r" onclick="toggleRevise('${a.id}')">✏️ 修改建议</button>
+    <button class="btn btn-x" onclick="reject(${idx})">❌ 不通过</button>
+  </div>
+  <textarea class="feedback" id="fb-${a.id}" placeholder="写下修改建议，保存后系统会收到通知..."></textarea>
+</div>`;
   }).join('');
 }
 
-function viewFull(id) {
-  // 跳转到阅读门户查看文章
-  const article = REVIEW_QUEUE.find(a => a.id === id);
-  if (article && article.url) {
-    window.open(article.url, '_blank');
+function toggleFull(id, idx) {
+  const pv = document.getElementById('pv-' + id);
+  const a = ARTICLES[idx];
+  if (pv.dataset.full === '1') {
+    pv.textContent = (a.content||'').substring(0, 500) + '\n\n  [向下滚动查看全文]';
+    pv.dataset.full = '0';
   } else {
-    alert('全文链接: https://eros0724.github.io/erosye/');
+    pv.textContent = a.content || '';
+    pv.dataset.full = '1';
   }
 }
 
-function approve(id, idx) {
-  if (confirm('确认批准发布这篇文章？')) {
-    REVIEW_QUEUE[idx].status = 'approved';
-    saveQueue();
+function approve(idx) {
+  if (confirm('确认批准发布「' + ARTICLES[idx].title + '」？\n\n发布到：个人网站 + 公众号 + LinkedIn + Medium')) {
+    ARTICLES[idx].status = 'approved';
     render();
-    // 这里会触发自动部署
-    alert('已批准！文章将自动部署到个人网站。');
+    alert('✅ 已批准！文章将自动部署。');
+    // 通知系统
+    fetch('https://ntfy.sh/eros_review_31989a25', {
+      method: 'POST',
+      headers: {'Title': '[APPROVED] ' + ARTICLES[idx].title.substring(0,40)},
+      body: 'Article approved by Eros. Auto-deploying to website.'
+    }).catch(()=>{});
   }
 }
 
 function toggleRevise(id) {
-  const input = document.getElementById('feedback-' + id);
-  input.classList.toggle('show');
-  input.focus();
-  
-  // 监听输入
-  input.onchange = function() {
-    const note = this.value.trim();
-    if (note) {
-      const article = REVIEW_QUEUE.find(a => a.id === id);
-      if (article) {
-        article.feedback = note;
-        article.status = 'in_review';
-        saveQueue();
-        render();
-      }
-    }
-  };
+  const fb = document.getElementById('fb-' + id);
+  fb.classList.toggle('show');
+  if (fb.classList.contains('show')) fb.focus();
 }
 
-function reject(id, idx) {
+function reject(idx) {
   const reason = prompt('不通过的原因：');
   if (reason) {
-    REVIEW_QUEUE.splice(idx, 1);
-    saveQueue();
+    ARTICLES[idx].status = 'rejected';
+    ARTICLES[idx].feedback = reason;
     render();
+    fetch('https://ntfy.sh/eros_review_31989a25', {
+      method: 'POST',
+      headers: {'Title': '[REJECTED] ' + ARTICLES[idx].title.substring(0,40)},
+      body: 'Rejected: ' + reason
+    }).catch(()=>{});
   }
 }
 
-// 添加模拟审核文章（实际从 push_review 触发）
-function addReviewArticle(article) {
-  REVIEW_QUEUE.unshift({
-    id: article.id || 'ART-' + Date.now(),
-    title: article.title,
-    date: article.date || new Date().toISOString().slice(0,10),
-    status: 'submitted',
-    platforms: article.platforms || ['website','wechat','linkedin','medium'],
-    preview: article.preview || article.excerpt || '',
-    url: article.url || 'https://eros0724.github.io/erosye/',
-    words: article.words || '~2000',
-  });
-  saveQueue();
-  render();
-}
-
-// 初始化
-loadQueue();
 render();
-
-// 暴露 API
-window.addReviewArticle = addReviewArticle;
 </script>
 </body>
 </html>
