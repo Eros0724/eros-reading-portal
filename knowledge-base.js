@@ -1,4 +1,6 @@
-const ARTICLES = [
+// Eros 知识库 — 累加式归档
+// 最后更新: 2026-06-29T23:48:30.691294
+const ALL_ARTICLES = [
   {
     "num": 1,
     "title": "全球AI人才短缺1:3.2，金融业最严重1:4.2，年薪最高$95万",
@@ -256,3 +258,4 @@ const ARTICLES = [
     "date_added": "2026-06-28"
   }
 ];
+const ALL_COMMENTS = {};
