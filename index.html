@@ -51,6 +51,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
   <div class="info" id="infoBar"></div>
   <div class="date-nav" id="dateNav"></div>
   <div class="filter-bar" id="filterBar"></div>
+  <div style="text-align:center;margin-top:8px">
+    <button id="showCommentsBtn" style="font-size:11px;padding:4px 10px;border:1px solid var(--gold);border-radius:10px;background:var(--gold-bg);color:var(--gold);cursor:pointer" onclick="toggleCommentsPanel()">📋 我的观点汇总</button>
+  </div>
+  <div id="commentsPanel" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:10px;padding:14px;margin-top:10px;max-height:300px;overflow-y:auto"></div>
 </div>
 <div id="list"></div>
 <div class="footer">Eros Ye 叶明希 · 累计知识库</div>
@@ -171,10 +175,56 @@ function saveAndUpdate(uid){
   const v=document.getElementById('input-'+uid).value.trim();
   if(v){
     saveComment(uid,v);
-    // 发送到服务器
-    fetch('https://eros0724.github.io/eros-reading-portal/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid,comment:v,date:new Date().toISOString().slice(0,10)})}).catch(()=>{});
+    // 发送评论到 ntfy（我实时收到） + 也存一份到 localStorage
+    const article = (ALL_ARTICLES||[]).find(a=>a.uid===uid);
+    const title = article ? article.title : uid;
+    const dateStr = new Date().toISOString().slice(0,10);
+    const payload = {
+      uid: uid,
+      title: title,
+      date: dateStr,
+      comment: v
+    };
+    // 方式1: ntfy 实时推送
+    fetch('https://ntfy.sh/eros_review_31989a25',{
+      method:'POST',
+      headers:{'Title':'[COMMENT] '+title.substring(0,40)},
+      body:'UID:'+uid+'\nDate:'+dateStr+'\nTitle:'+title+'\n\nComment:\n'+v
+    }).catch(()=>{});
+    // 方式2: 同时保存到 localStorage（双重保险）
+    try{
+      const comments=JSON.parse(localStorage.getItem('eros_comments')||'{}');
+      comments[uid]={comment:v, date:dateStr, title:title};
+      localStorage.setItem('eros_comments',JSON.stringify(comments));
+    }catch(e){}
     render();
   }
+}
+
+function toggleCommentsPanel(){
+  const panel=document.getElementById('commentsPanel');
+  if(panel.style.display==='block'){
+    panel.style.display='none';
+    return;
+  }
+  const comments=JSON.parse(localStorage.getItem('eros_comments')||'{}');
+  const entries=Object.entries(comments).filter(([_,v])=>v&&(v.comment||v));
+  if(entries.length===0){
+    panel.innerHTML='<p style="color:var(--muted);font-size:12px">暂无已保存的观点。在文章下方写评价并保存即可。</p>';
+  }else{
+    panel.innerHTML='<h4 style="font-size:13px;margin-bottom:8px">💭 我的观点（'+entries.length+'条）</h4>'+
+      entries.sort((a,b)=>new Date(b[1].date||0)-new Date(a[1].date||0)).map(([uid,data])=>{
+        const c=typeof data==='string'?data:(data.comment||'');
+        const d=data.date||'';
+        const t=data.title||uid;
+        return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:11px">'+
+          '<div style="color:var(--gold);margin-bottom:2px">'+t.substring(0,60)+'</div>'+
+          '<div style="color:var(--text2)">'+c.substring(0,200)+'</div>'+
+          '<div style="color:var(--muted);margin-top:2px">'+d+'</div>'+
+          '</div>';
+      }).join('');
+  }
+  panel.style.display='block';
 }
 
 render();
